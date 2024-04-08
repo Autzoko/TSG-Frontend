@@ -1,10 +1,30 @@
 <template>
-  <nav>
+  <!--<nav>
     <router-link to="/">Home</router-link> |
     <router-link to="/about">About</router-link>
   </nav>
-  <router-view/>
+  <router-view/>-->
+  <Header></Header>
+  <div style="display: flex">
+    <Aside/>
+    <router-view style="flex: 1"/>
+  </div>
+  <hr style="padding-top: 10px"/>
+  <bottom></bottom>
 </template>
+
+<script>
+import Header from "@/components/Header.vue";
+import Aside from "@/components/Aside.vue";
+import Bottom from "@/components/Bottom.vue";
+export default {
+  components: {
+    Bottom,
+    Aside,
+    Header,
+  }
+}
+</script>
 
 <style>
 #app {
