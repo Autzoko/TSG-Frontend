@@ -1,5 +1,5 @@
 <template>
-  <div style="height: 600px">
+  <div style="height: 700px">
     <h1 style="padding-top: 70px">Start A New Caption! Captain!</h1>
     <div style="padding-top: 300px">
       <el-button style="background-color: dodgerblue" @click="startSession"><div style="color: white">Start</div></el-button>
@@ -16,7 +16,7 @@ export default {
   setup() {
     const router = useRouter();
     const startSession = () => {
-      router.push({name: 'ImageCaptioning'});
+      router.push({name: 'LoginView'});
     };
     return {
       startSession
