@@ -1,49 +1,78 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
-import ImageCaptioning from "@/views/ImageCaptioning.vue";
-import LoginView from "@/views/LoginView.vue";
-import store from "@/store";
+import router from '@/router/routers';
+import {useStore} from "@/store";
+import {queryAllMenu} from "@/api/menu/sysMenu";
+import {errorMsg} from "@/utils/message";
 
-const routes = [
-  {
-    path: '/',
-    name: 'home',
-    component: HomeView,
-    meta: { requiresAuth: false },
-  },
-  {
-    path: '/about',
-    name: 'about',
-    // route level code-splitting
-    // this generates a separate chunk (about.[hash].js) for this route
-    // which is lazy-loaded when the route is visited.
-    component: () => import(/* webpackChunkName: "about" */ '../views/AboutView.vue')
-  },
-  {
-    path: '/caption',
-    name: 'ImageCaptioning',
-    component: ImageCaptioning,
-    meta: { requiresAuth: true },
-  },
-  {
-    path: "/login",
-    name: 'LoginView',
-    component: LoginView,
-    meta: { requiresAuth: false },
-  }
-]
-
-const router = createRouter({
-  history: createWebHistory(process.env.BASE_URL),
-  routes
-});
+const whiteList = ['/login', '/401', '/404']
 
 router.beforeEach((to, from, next) => {
-  if(to.meta.requiresAuth && !store.state.auth.loggedIn) {
-    next('/login');
+  console.log('router request: ' + to.path)
+  const store = useStore()
+  // if logged in
+  if(store.token) {
+    if(to.path === '/') {
+      router.go(-1)
+    }
+    if(to.path === '/login') {
+      next({path: '/Layout'})
+    } else {
+      if(!store.isLoadMenu) {
+        loadMenus(next, to)
+      } else {
+        if(!hashRoute(to)) {
+          addRoute()
+          if(hashRoute(to)) {
+            next(to.fullPath)
+          } else {
+            next({path: '/404'})
+          }
+        } else {
+          next()
+        }
+      }
+    }
   } else {
-    next();
+    if(whiteList.indexOf(to.path) !== -1) {
+      next()
+    } else {
+      next({path: '/login'})
+    }
   }
-});
+})
 
-export default router
+export function loadMenus(next, to) {
+  const store = useStore()
+  queryAllMenu().then(res => {
+    if(res.success) {
+      if(res.data.length > 0) {
+        store.routerAction(res.data)
+        store.loadMenuAction(true)
+        next({...to, replace: true})
+      }
+    } else {
+      errorMsg(res.msg)
+    }
+  })
+}
+
+export function hashRoute(to) {
+  let find = router.getRoutes().find(item => item.path === to.path)
+  return !!find
+}
+
+export function addRoute() {
+  const store = useStore()
+  let routers = store.routers
+  if(routers && routers.length > 0) {
+    console.info(routers)
+    routers.forEach(item => {
+      if(item.path) {
+        router.addRoute('Layout', {
+          path: item.path,
+          name: item.name,
+          component: item.component != null ? () => import(`@/views/${item.component()}`) : null
+        })
+      }
+    })
+  }
+}

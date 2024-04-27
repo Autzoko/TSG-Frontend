@@ -1,10 +1,27 @@
-import { createApp } from 'vue'
-import App from './App.vue'
-import router from './router'
-import store from './store'
+import { createApp } from 'vue';
+import ElementPlus from 'element-plus';
+import {createPinia} from "pinia";
+import 'element-plus/dist/index.css';
+import App from './App.vue';
+import router from "@/router/routers";
+import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 
-import '@/assets/css/global.css'
-import ElementPlus from 'element-plus'
-import 'element-plus/dist/index.css'
+import './assets/css/public.css'
+import './assets/iconfont/iconfont.css'
 
-createApp(App).use(store).use(router).use(ElementPlus).mount('#app')
+import './utils/message'
+import './router/index'
+import './utils/common'
+
+const pinia = createPinia();
+pinia.use(piniaPluginPersistedstate)
+
+const app = createApp(App)
+
+app.use(pinia)
+app.use(ElementPlus)
+app.use(router)
+
+app.mount('#app')
+
+
