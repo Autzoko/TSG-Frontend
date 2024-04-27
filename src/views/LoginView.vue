@@ -1,6 +1,6 @@
 <template>
-  <div class="container" style="height: 700px">
-    <div class="login-container" :style="{ background: gradientColor}">
+  <div class="container" :style="{ animation: 'colorFlow 16s infinite' }">
+    <div class="login-container">
       <div class="login-title">Login for Image Captioning</div>
       <el-form class="login-form" ref="loginForm" :model="loginForm" label-width="80px">
         <el-form-item label="user" prop="user_name">
@@ -14,19 +14,24 @@
           <el-button class="login-button" @click="showRegisterDialog = true">sign in</el-button>
         </el-form-item>
       </el-form>
+
+      <el-dialog title="Sign In" v-model="showRegisterDialog">
+        <RegisterDialog @registered="registerSuccess" @register-failed="registerFailed"/>
+      </el-dialog>
     </div>
   </div>
 </template>
 
 <script>
 import axios from "axios";
+import RegisterDialog from "@/components/RegisterDialog.vue";
+import {mapMutations} from "vuex";
 
 export default {
   name: "loginView",
+  components: {RegisterDialog},
   data() {
     return {
-      colors: ['#ff9999', '#99ff99', '#9999ff'],
-      colorIndex: 0,
       loginForm: {
         user_name: '',
         user_pwd: '',
@@ -35,22 +40,8 @@ export default {
     };
   },
 
-  computed: {
-    gradientColor() {
-      const nextIndex = (this.colorIndex + 1) % this.colorIndex.length;
-      return `linear-gradient(to right, ${this.colors[this.colorIndex]}, ${this.colors[nextIndex]}`;
-    },
-  },
-
-  mounted() {
-    setInterval(this.toggleColor, 2000);
-  },
-
   methods: {
-    toggleColor() {
-      this.colorIndex = (this.colorIndex + 1) % this.colors.length;
-    },
-
+    ...mapMutations(['login']),
     async handleLogin() {
       if(this.loginForm.user_name === '') {
         this.$message.warning("please fill user name");
@@ -62,18 +53,31 @@ export default {
       try {
         const response = await axios.post('api/user/login', this.loginForm);
         if(response.status === 200) {
+          console.log("response");
+          console.log(response.data);
+          this.login();
           this.$router.push('/caption');
         }
       } catch (error) {
         this.$message.error(error.response.data.info);
       }
+    },
+
+    registerSuccess() {
+      this.showRegisterDialog = false;
+      this.$message.success("sign in success");
+    },
+
+    registerFailed() {
+      this.showRegisterDialog = false;
+      this.$message.error("sign in failed");
     }
   }
 
 }
 </script>
 
-<style scoped>
+<style>
 
 .container {
   padding: 20px;
@@ -82,8 +86,6 @@ export default {
 .login-container {
   padding: 20px;
   border-radius: 5px;
-  color: white;
-  transition: background-color 0.5s ease;
   display: flex;
   flex-direction: column;
   height: 50vh;
@@ -121,6 +123,13 @@ export default {
 
 .login-button {
   margin-left: 10px;
+}
+
+@keyframes colorFlow {
+  0% {background-color: #ff9999;}
+  33% {background-color: #99ff99;}
+  66% {background-color: #9999ff;}
+  100% {background-color: #ff9999;}
 }
 
 </style>
